@@ -30,6 +30,10 @@ async def hello(ctx):
 
 @bot.command(name='start_youtube')
 async def start_youtube_chat(ctx, video_id: str = None):
+    # ✅ منع تنفيذ الأمر في الخاص
+    if isinstance(ctx.channel, discord.DMChannel):
+        await ctx.send("❌ هذا الأمر لا يعمل في الخاص! الرجاء استخدامه في روم داخل سيرفر.")
+        return
     if not video_id:
         await ctx.send('❌ يرجى إدخال كود الفيديو:\n`!start_youtube VIDEO_ID`\n'
                       'مثال: `!start_youtube dQw4w9WgXcQ`')
