@@ -21,7 +21,7 @@ async def on_ready():
     print(f'✅ {bot.user} متصل بـ Discord!')
     print(f'🔗 البوت موجود في {len(bot.guilds)} سيرفر')
     print(f'🆔 Bot ID: {bot.user.id}')
-        await bot.change_presence(activity=discord.Game(name="!commands"))
+    await bot.change_presence(activity=discord.Game(name="!commands"))
 
 @bot.command(name='hello')
 async def hello(ctx):
