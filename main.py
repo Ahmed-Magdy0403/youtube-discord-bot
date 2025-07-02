@@ -14,7 +14,7 @@ intents.members = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 # ✅ السماح فقط لمن لديهم الرتبة المحددة
-ALLOWED_ROLE_ID = 123456789012345678  # ← ← ← ← ← عدّل الـ ID ده برتبتك
+ALLOWED_ROLE_ID = 1389955793520165046  # ← ← ← ← ← عدّل الـ ID ده برتبتك
 
 @bot.check
 async def global_check(ctx):
