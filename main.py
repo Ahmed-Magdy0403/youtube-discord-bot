@@ -5,12 +5,25 @@ import os
 from keep_alive import keep_alive
 import pytchat
 from datetime import datetime
-import threading
 
 # إعداد البوت
 intents = discord.Intents.default()
 intents.message_content = True
+intents.guilds = True
+intents.members = True
 bot = commands.Bot(command_prefix='!', intents=intents)
+
+# ✅ السماح فقط لمن لديهم الرتبة المحددة
+ALLOWED_ROLE_ID = 123456789012345678  # ← ← ← ← ← عدّل الـ ID ده برتبتك
+
+@bot.check
+async def global_check(ctx):
+    if isinstance(ctx.author, discord.Member):
+        allowed = any(role.id == ALLOWED_ROLE_ID for role in ctx.author.roles)
+        if not allowed:
+            await ctx.send("❌ ليس لديك الصلاحية لاستخدام هذا الأمر.")
+        return allowed
+    return False
 
 # متغيرات للتحكم في الشات
 active_chats = {}
@@ -30,7 +43,6 @@ async def hello(ctx):
 
 @bot.command(name='start_youtube')
 async def start_youtube_chat(ctx, video_id: str = None):
-    # ✅ منع تنفيذ الأمر في الخاص
     if isinstance(ctx.channel, discord.DMChannel):
         await ctx.send("❌ هذا الأمر لا يعمل في الخاص! الرجاء استخدامه في روم داخل سيرفر.")
         return
@@ -72,7 +84,7 @@ async def start_youtube_chat(ctx, video_id: str = None):
         await ctx.send(f'❌ خطأ في الاتصال: ```{str(e)}```')
 
 async def monitor_youtube_chat(ctx, channel_id):
-    global message_history  # ✅ مهم لحل المشكلة
+    global message_history
 
     chat_data = active_chats.get(channel_id)
     if not chat_data:
@@ -97,19 +109,16 @@ async def monitor_youtube_chat(ctx, channel_id):
                     break
 
                 message_content = c.message.strip() if c.message else ""
-                message_key = f"{c.author.name}:{message_content}"  # ✅ حذف datetime
+                message_key = f"{c.author.name}:{message_content}"
 
-                # تجاهل الرسائل المتكررة
                 if message_key in message_history:
                     continue
 
                 message_history.add(message_key)
 
-                # تقليل عدد الرسائل المحفوظة لتقليل استهلاك الذاكرة
                 if len(message_history) > 300:
                     message_history = set(list(message_history)[-200:])
 
-                # تنسيق الوقت
                 try:
                     if c.datetime:
                         dt = datetime.fromisoformat(c.datetime.replace('Z', '+00:00'))
