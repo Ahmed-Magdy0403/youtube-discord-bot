@@ -25,6 +25,10 @@ async def global_check(ctx):
         return allowed
     return False
 
+# ✅ دالة لاكتشاف وجود حروف عربية
+def has_arabic(text):
+    return any('\u0600' <= c <= '\u06FF' for c in text)
+
 # متغيرات للتحكم في الشات
 active_chats = {}
 message_history = set()  # لتجنب الرسائل المتكررة
@@ -33,12 +37,12 @@ message_history = set()  # لتجنب الرسائل المتكررة
 async def on_ready():
     print(f'✅ {bot.user} متصل بـ Discord!')
     print(f'🔗 البوت موجود في {len(bot.guilds)} سيرفر')
-    print(f'🆔 Bot ID: {bot.user.id}')
+    print(f'🄟 Bot ID: {bot.user.id}')
     await bot.change_presence(activity=discord.Game(name="!commands"))
 
 @bot.command(name='hello')
 async def hello(ctx):
-    await ctx.send('🎬 مرحباً! بوت YouTube Live Chat جاهز للعمل!\n'
+    await ctx.send('🎮 مرحباً! بوت YouTube Live Chat جاهز للعمل!\n'
                    'استخدم `!start_youtube VIDEO_ID` لبدء نقل الرسائل')
 
 @bot.command(name='start_youtube')
@@ -57,7 +61,7 @@ async def start_youtube_chat(ctx, video_id: str = None):
         await ctx.send('⚠️ يوجد شات نشط بالفعل في هذه القناة! استخدم `!stop_youtube` لإيقافه أولاً')
         return
 
-    await ctx.send(f'🔄 محاولة الاتصال بـ YouTube Live Chat...\n📺 Video ID: `{video_id}`')
+    await ctx.send(f'🔄 محاولة الاتصال بـ YouTube Live Chat...\n📻 Video ID: `{video_id}`')
 
     try:
         chat = pytchat.create(video_id=video_id)
@@ -73,7 +77,7 @@ async def start_youtube_chat(ctx, video_id: str = None):
             color=0x00ff00,
             timestamp=datetime.now()
         )
-        embed.add_field(name="📺 Video ID", value=video_id, inline=True)
+        embed.add_field(name="📻 Video ID", value=video_id, inline=True)
         embed.add_field(name="📍 قناة Discord", value=ctx.channel.mention, inline=True)
         embed.set_footer(text="© 2025 Ahmed Magdy", icon_url="https://cdn.discordapp.com/emojis/741243683501817978.png")
         await ctx.send(embed=embed)
@@ -131,8 +135,11 @@ async def monitor_youtube_chat(ctx, channel_id):
                 elif len(message_content) > 800:
                     message_content = message_content[:800] + "..."
 
+                if has_arabic(message_content):
+                    message_content = '\u200F' + message_content
+
                 embed = discord.Embed(
-                    title="🎬 **YouTube Live Chat**",
+                    title="🎮 **YouTube Live Chat**",
                     description=f"### 👤 **{c.author.name}**\n\n### 💬 {message_content}",
                     color=0xff0000,
                     timestamp=timestamp
@@ -143,7 +150,7 @@ async def monitor_youtube_chat(ctx, channel_id):
 
                 message_count += 1
                 embed.set_footer(
-                    text=f"📺 YouTube Live Chat • رسالة #{message_count} • 🔥",
+                    text=f"📻 YouTube Live Chat • رسالة #{message_count} • 🔥",
                     icon_url="https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png"
                 )
 
@@ -199,7 +206,7 @@ async def status(ctx):
     )
 
     embed.add_field(name="🔗 الاتصال", value="متصل ✅", inline=True)
-    embed.add_field(name="📺 الشاتات النشطة", value=f"{active_count}", inline=True)
+    embed.add_field(name="📻 الشاتات النشطة", value=f"{active_count}", inline=True)
     embed.add_field(name="🏓 Ping", value=f"{round(bot.latency * 1000)}ms", inline=True)
 
     if active_count > 0:
@@ -212,7 +219,7 @@ async def status(ctx):
 @bot.command(name='commands')
 async def commands_help(ctx):
     embed = discord.Embed(
-        title="🎬 YouTube Live Chat Bot - المساعدة",
+        title="🎮 YouTube Live Chat Bot - المساعدة",
         description="بوت تنظيم رسايل اللايف بتقنية بسيطة وسلسة",
         color=0x0099ff
     )
