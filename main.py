@@ -44,10 +44,10 @@ async def on_ready():
 
 @bot.command(name='explain')
 async def explain_command(ctx):
-    await ctx.send("**# اولا الاي دي بنجيبه منين؟**\n**هنجيب الاي دي عن طريق لينك اللايف. يعني هتبدأ اللايف عادي جدا وبعدين هتاخد الاي دي من لينك اللايف وتكتبه كالتالي**")
+    await ctx.send("**# اولا الاي دي بنجيبه منين؟**\n**هنجيب الاي دي عن طريق لينك اللايف. يعني هتبدأ اللايف عادي جدا وبعدين هتاخد الاي دي من لينك اللايف وتكتبه كالتالي** \n ~~==========================================================~~")
     await asyncio.sleep(6)
 
-    await ctx.send("**خلينا نقول مثال ان ده الاي دي :** \n MKYi1QrW2jg&t=1612s \n **استخدام الامر هيكون كده :** \n `!start_youtube MKYi1QrW2jg&t=1612s`")
+    await ctx.send("**خلينا نقول مثال ان ده الاي دي :** \n `MKYi1QrW2jg&t=1612s` \n **استخدام الامر هيكون كده :** \n `!start_youtube MKYi1QrW2jg&t=1612s` \n ~~==========================================================~~")
     await asyncio.sleep(8)
 
     loading_msg = await ctx.send("**جاري تجهيز شرح عن طريق الصور, `الشرح للكمبيوتر والموبايل` ⏳**")
@@ -58,17 +58,32 @@ async def explain_command(ctx):
     except Exception as e:
         await ctx.send(f"Error deleting loading message: {e}")
 
-    # روابط الصور (مثلاً من Imgur)
-    images = [
-        "https://i.postimg.cc/RZg19WHQ/1.png",
-        "https://i.postimg.cc/m2wCNP8f/2.png",
-        "https://i.postimg.cc/sf5px6W2/3.png",
-        "https://i.postimg.cc/VL1XCq9W/4.png"
-    ]
+   # روابط الصور + الرسائل
+images = [
+    {
+        "url": "https://i.postimg.cc/RZg19WHQ/1.png",
+        "description": "📌 مكان الاي دي في اللينك من الكمبيوتر."
+    },
+    {
+        "url": "https://i.postimg.cc/m2wCNP8f/2.png",
+        "description": "📌 خطوات ازاي تجيب الاي دي من الموبايل : 1."
+    },
+    {
+        "url": "https://i.postimg.cc/sf5px6W2/3.png",
+        "description": "2."
+    },
+    {
+        "url": "https://i.postimg.cc/VL1XCq9W/4.png",
+        "description": "3"
+    }
+]
 
-    for link in images:
-        await ctx.send(link)
-        await asyncio.sleep(4)
+# إرسال الصور مع الرسائل
+for item in images:
+    embed = discord.Embed(description=item["description"], color=0x00aaff)
+    embed.set_image(url=item["url"])
+    await ctx.send(embed=embed)
+    await asyncio.sleep(4)
 
 @bot.command(name='start_youtube')
 async def start_youtube_chat(ctx, video_id: str = None):
