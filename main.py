@@ -56,7 +56,7 @@ async def explain_command(ctx):
 
     try:
         await loading_msg.delete()
-        except Exception as e:
+    except Exception as e:
         await ctx.send(f"Error deleting loading message: {e}")
 
     # روابط الصور (مثلاً من Imgur)
