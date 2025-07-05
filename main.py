@@ -44,15 +44,14 @@ async def on_ready():
 
 @bot.command(name='explain')
 async def explain_command(ctx):
-    await ctx.send("اولا الاي دي بنجيبه منين؟\nهنجيب الاي دي عن طريق لينك اللايف. يعني هتبدأ اللايف عادي جدا وبعدين هتاخد الاي دي من لينك اللايف وتكتبه كالتالي ")
-    await asyncio.sleep(7)
+    await ctx.send("**# اولا الاي دي بنجيبه منين؟**\n**هنجيب الاي دي عن طريق لينك اللايف. يعني هتبدأ اللايف عادي جدا وبعدين هتاخد الاي دي من لينك اللايف وتكتبه كالتالي**")
+    await asyncio.sleep(6)
 
-    await ctx.send("`!start_youtube ID` \n خلينا نقول مثال ان ده الاي دي MKYi1QrW2jg&t=1612s \n استخدام الامر هيكون كده \n `!start_youtube MKYi1QrW2jg&t=1612s`")
-    await asyncio.sleep(9)
+    await ctx.send("**خلينا نقول مثال ان ده الاي دي :** \n MKYi1QrW2jg&t=1612s \n **استخدام الامر هيكون كده :** \n `!start_youtube MKYi1QrW2jg&t=1612s`")
+    await asyncio.sleep(8)
 
-    await ctx.send("جاري تجهيز شرح عن طريق الصور, `الشرح للكمبيوتر والموبايل` ⏳")
-    loading_msg = await ctx.send("🔍 ...")
-    await asyncio.sleep(5)
+    loading_msg = await ctx.send("**جاري تجهيز شرح عن طريق الصور, `الشرح للكمبيوتر والموبايل` ⏳**")
+    await asyncio.sleep(4)
 
     try:
         await loading_msg.delete()
@@ -69,7 +68,7 @@ async def explain_command(ctx):
 
     for link in images:
         await ctx.send(link)
-        await asyncio.sleep(2)
+        await asyncio.sleep(4)
 
 @bot.command(name='start_youtube')
 async def start_youtube_chat(ctx, video_id: str = None):
