@@ -15,7 +15,7 @@ intents.members = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 # ✅ السماح فقط لمن لديهم الرتبة المحددة
-ALLOWED_ROLE_ID = 1389955793520165046  # ← ← ← ← ← عدّل الـ ID ده برتبتك
+ALLOWED_ROLE_ID = 1389955793520165046
 
 @bot.check
 async def global_check(ctx):
@@ -28,7 +28,7 @@ async def global_check(ctx):
 
 # متغيرات للتحكم في الشات
 active_chats = {}
-message_history = set()  # لتجنب الرسائل المتكررة
+message_history = set()
 
 def fix_mixed_text(text):
     if re.search(r'[\u0600-\u06FF]', text) and re.search(r'[a-zA-Z]', text):
@@ -42,25 +42,48 @@ async def on_ready():
     print(f'🆔 Bot ID: {bot.user.id}')
     await bot.change_presence(activity=discord.Game(name="!commands"))
 
-@bot.command(name='hello')
-async def hello(ctx):
-    await ctx.send('🎬 مرحباً! بوت YouTube Live Chat جاهز للعمل!\n'
-                   'استخدم `!start_youtube VIDEO_ID` لبدء نقل الرسائل')
+@bot.command(name='explain')
+async def explain_command(ctx):
+    await ctx.send("اولا الاي دي بنجيبه منين؟\nهنجيب الاي دي عن طريق لينك اللايف. يعني هتبدأ اللايف عادي جدا وبعدين هتاخد الاي دي من لينك اللايف وتكتبه كالتالي ")
+    await asyncio.sleep(2)
+
+    await ctx.send("`!start_youtube ID` \n خلينا نقول مثال ان ده الاي دي MKYi1QrW2jg&t=1612s \n استخدام الامر هيكون كده \n `!start_youtube MKYi1QrW2jg&t=1612s`")
+    await asyncio.sleep(2)
+
+    await ctx.send("جاري تجهيز شرح عن طريق الصور, `الشرح للكمبيوتر والموبايل` ⏳")
+    loading_msg = await ctx.send("🔍 ...")
+    await asyncio.sleep(2)
+
+    await loading_msg.delete()
+
+    # روابط الصور (مثلاً من Imgur)
+    images = [
+        "https://i.postimg.cc/RZg19WHQ/1.png",
+        "https://i.postimg.cc/m2wCNP8f/2.png",
+        "https://i.postimg.cc/sf5px6W2/3.png",
+        "https://i.postimg.cc/VL1XCq9W/4.png"
+    ]
+
+    for link in images:
+        await ctx.send(link)
+        await asyncio.sleep(2)
 
 @bot.command(name='start_youtube')
 async def start_youtube_chat(ctx, video_id: str = None):
     if isinstance(ctx.channel, discord.DMChannel):
-        await ctx.send("❌ هذا الأمر لا يعمل في الخاص! الرجاء استخدامه في روم داخل سيرفر.")
+        await ctx.send("❌ هذا الأمر لا يعمل في الخاص!")
         return
     if not video_id:
-        await ctx.send('❌ يرجى إدخال كود الفيديو:\n`!start_youtube VIDEO_ID`\n'
-                      'مثال: `!start_youtube dQw4w9WgXcQ`')
+        await ctx.send("❌ يرجى إدخال كود الفيديو\nمثال: `!start_youtube dQw4w9WgXcQ`")
+        return
+
+    if 'youtube.com' in video_id or 'youtu.be' in video_id:
+        await ctx.send("⚠️ يبدو أنك وضعت رابطاً بدلاً من ID الفيديو!\nاستخدم الأمر `!explain` لمعرفة كيفية استخراج ID الصحيح.")
         return
 
     channel_id = ctx.channel.id
-
     if channel_id in active_chats:
-        await ctx.send('⚠️ يوجد شات نشط بالفعل في هذه القناة! استخدم `!stop_youtube` لإيقافه أولاً')
+        await ctx.send("⚠️ يوجد شات نشط بالفعل! استخدم `!stop_youtube` لإيقافه.")
         return
 
     await ctx.send(f'🔄 محاولة الاتصال بـ YouTube Live Chat...\n📺 Video ID: `{video_id}`')
@@ -68,26 +91,20 @@ async def start_youtube_chat(ctx, video_id: str = None):
     try:
         chat = pytchat.create(video_id=video_id)
         if not chat.is_alive():
-            await ctx.send('❌ لا يمكن الاتصال بالشات. تأكد من أن الفيديو يحتوي على Live Chat نشط')
+            await ctx.send("❌ تم العثور على الفيديو لكن البث غير مباشر حاليًا!")
             return
 
         active_chats[channel_id] = {'chat': chat, 'running': True}
-
-        embed = discord.Embed(
-            title="✅ تم الاتصال بنجاح!",
-            description=f"بدء نقل رسائل YouTube Live Chat",
-            color=0x00ff00,
-            timestamp=datetime.now()
-        )
+        embed = discord.Embed(title="✅ تم الاتصال بنجاح!", description=f"بدأ نقل رسائل البث", color=0x00ff00, timestamp=datetime.now())
         embed.add_field(name="📺 Video ID", value=video_id, inline=True)
         embed.add_field(name="📍 قناة Discord", value=ctx.channel.mention, inline=True)
-        embed.set_footer(text="© 2025 Ahmed Magdy", icon_url="https://cdn.discordapp.com/emojis/741243683501817978.png")
+        embed.set_footer(text="© 2025 Ahmed Magdy")
         await ctx.send(embed=embed)
 
         bot.loop.create_task(monitor_youtube_chat(ctx, channel_id))
 
     except Exception as e:
-        await ctx.send(f'❌ خطأ في الاتصال: ```{str(e)}```')
+        await ctx.send(f'❌ خطأ في الاتصال:\n```{str(e)}```')
 
 async def monitor_youtube_chat(ctx, channel_id):
     global message_history
@@ -227,7 +244,7 @@ async def commands_help(ctx):
     `!start_youtube VIDEO_ID` - بدء نقل رسائل من يوتيوب لايف
     `!stop_youtube` - إيقاف النقل فوراً
     `!status` - عرض تفاصيل حالة البوت
-    `!hello` - تحية البوت والترحيب
+    `!explain` - شرح ازاي تجيب الاي دي
     `!commands` - عرض قائمة المساعدة الكاملة
     """
 
