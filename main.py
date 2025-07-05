@@ -58,32 +58,32 @@ async def explain_command(ctx):
     except Exception as e:
         await ctx.send(f"Error deleting loading message: {e}")
 
-   # روابط الصور + الرسائل
-images = [
-    {
-        "url": "https://i.postimg.cc/RZg19WHQ/1.png",
-        "description": "📌 مكان الاي دي في اللينك من الكمبيوتر."
-    },
-    {
-        "url": "https://i.postimg.cc/m2wCNP8f/2.png",
-        "description": "📌 خطوات ازاي تجيب الاي دي من الموبايل : 1."
-    },
-    {
-        "url": "https://i.postimg.cc/sf5px6W2/3.png",
-        "description": "2."
-    },
-    {
-        "url": "https://i.postimg.cc/VL1XCq9W/4.png",
-        "description": "3"
-    }
-]
+    # ✅ روابط الصور + الرسائل (جوا الدالة)
+    images = [
+        {
+            "url": "https://i.postimg.cc/RZg19WHQ/1.png",
+            "description": "📌 مكان الاي دي في اللينك من الكمبيوتر."
+        },
+        {
+            "url": "https://i.postimg.cc/m2wCNP8f/2.png",
+            "description": "📌 خطوات ازاي تجيب الاي دي من الموبايل : 1."
+        },
+        {
+            "url": "https://i.postimg.cc/sf5px6W2/3.png",
+            "description": "2."
+        },
+        {
+            "url": "https://i.postimg.cc/VL1XCq9W/4.png",
+            "description": "3"
+        }
+    ]
 
-# إرسال الصور مع الرسائل
-for item in images:
-    embed = discord.Embed(description=item["description"], color=0x00aaff)
-    embed.set_image(url=item["url"])
-    await ctx.send(embed=embed)
-    await asyncio.sleep(4)
+    # ✅ إرسال الصور مع الرسائل
+    for item in images:
+        embed = discord.Embed(description=item["description"], color=0x00aaff)
+        embed.set_image(url=item["url"])
+        await ctx.send(embed=embed)
+        await asyncio.sleep(4)
 
 @bot.command(name='start_youtube')
 async def start_youtube_chat(ctx, video_id: str = None):
