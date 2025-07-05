@@ -45,16 +45,19 @@ async def on_ready():
 @bot.command(name='explain')
 async def explain_command(ctx):
     await ctx.send("اولا الاي دي بنجيبه منين؟\nهنجيب الاي دي عن طريق لينك اللايف. يعني هتبدأ اللايف عادي جدا وبعدين هتاخد الاي دي من لينك اللايف وتكتبه كالتالي ")
-    await asyncio.sleep(2)
+    await asyncio.sleep(7)
 
     await ctx.send("`!start_youtube ID` \n خلينا نقول مثال ان ده الاي دي MKYi1QrW2jg&t=1612s \n استخدام الامر هيكون كده \n `!start_youtube MKYi1QrW2jg&t=1612s`")
-    await asyncio.sleep(2)
+    await asyncio.sleep(9)
 
     await ctx.send("جاري تجهيز شرح عن طريق الصور, `الشرح للكمبيوتر والموبايل` ⏳")
     loading_msg = await ctx.send("🔍 ...")
-    await asyncio.sleep(2)
+    await asyncio.sleep(5)
 
+    try:
     await loading_msg.delete()
+except Exception as e:
+    await ctx.send(f"Error deleting loading message: {e}")
 
     # روابط الصور (مثلاً من Imgur)
     images = [
