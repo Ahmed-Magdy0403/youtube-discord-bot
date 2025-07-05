@@ -54,10 +54,10 @@ async def explain_command(ctx):
     loading_msg = await ctx.send("🔍 ...")
     await asyncio.sleep(5)
 
-try:
-await loading_msg.delete()
-except Exception as e:
-await ctx.send(f"Error deleting loading message: {e}")
+    try:
+        await loading_msg.delete()
+        except Exception as e:
+        await ctx.send(f"Error deleting loading message: {e}")
 
     # روابط الصور (مثلاً من Imgur)
     images = [
