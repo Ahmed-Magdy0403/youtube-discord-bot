@@ -62,7 +62,7 @@ async def explain_command(ctx):
     await ctx.send("**# اولا الاي دي بنجيبه منين؟**\n**هنجيب الاي دي عن طريق لينك اللايف. يعني هتبدأ اللايف عادي جدا وبعدين هتاخد الاي دي من لينك اللايف وتكتبه كالتالي** \n ~~==========================================================~~")
     await asyncio.sleep(6)
 
-    await ctx.send("**خلينا نقول مثال ان ده الاي دي :** \n `MKYi1QrW2jg&t=1612s` \n **استخدام الامر هيكون كده :** \n `!start_youtube MKYi1QrW2jg&t=1612s` \n ~~==========================================================~~")
+    await ctx.send("**خلينا نقول مثال ان ده الاي دي :** \n `MKYi1QrW2jg&t=1612s` \n **استخدام الامر هيكون كده :** \n `!start MKYi1QrW2jg&t=1612s` \n ~~==========================================================~~")
     await asyncio.sleep(8)
 
     loading_msg = await ctx.send("**جاري تجهيز شرح عن طريق الصور, `الشرح للكمبيوتر والموبايل` ⏳**")
@@ -98,20 +98,20 @@ async def explain_command(ctx):
         await ctx.send(embed=embed)
         await asyncio.sleep(4)
 
-@bot.command(name='start_youtube')
+@bot.command(name='start')
 async def start_youtube_chat(ctx, video_id: str = None):
     if isinstance(ctx.channel, discord.DMChannel):
         await ctx.send("❌ هذا الأمر لا يعمل في الخاص!")
         return
     if not video_id:
-        await ctx.send("❌ يرجى إدخال كود الفيديو\nمثال: `!start_youtube dQw4w9WgXcQ`")
+        await ctx.send("❌ يرجى إدخال كود الفيديو\nمثال: `!start dQw4w9WgXcQ`")
         return
 
     video_id = extract_video_id(video_id)
 
     channel_id = ctx.channel.id
     if channel_id in active_chats:
-        await ctx.send("⚠️ يوجد شات نشط بالفعل! استخدم `!stop_youtube` لإيقافه.")
+        await ctx.send("⚠️ يوجد شات نشط بالفعل! استخدم `!stop` لإيقافه.")
         return
 
     await ctx.send(f'🔄 محاولة الاتصال بـ YouTube Live Chat...\n📺 Video ID: `{video_id}`')
@@ -125,7 +125,7 @@ async def start_youtube_chat(ctx, video_id: str = None):
         active_chats[channel_id] = {'chat': chat, 'running': True}
         embed = discord.Embed(title="✅ تم الاتصال بنجاح!", description=f"بدأ نقل رسائل البث", color=0x00ff00, timestamp=datetime.now())
         embed.add_field(name="📺 Video ID", value=video_id, inline=True)
-        embed.add_field(name="📍 قناة Discord", value=ctx.channel.mention, inline=True)
+        embed.add_field(name="📍 روم Discord", value=ctx.channel.mention, inline=True)
         embed.set_footer(text="© 2025 Ahmed Magdy")
         await ctx.send(embed=embed)
 
@@ -216,7 +216,7 @@ async def monitor_youtube_chat(ctx, channel_id):
         if channel_id in active_chats:
             del active_chats[channel_id]
 
-@bot.command(name='stop_youtube')
+@bot.command(name='stop')
 async def stop_youtube_chat(ctx):
     channel_id = ctx.channel.id
 
@@ -264,8 +264,8 @@ async def commands_help(ctx):
     )
 
     commands_text = """
-    `!start_youtube VIDEO_ID_or_LINK` - بدء نقل رسائل من يوتيوب لايف
-    `!stop_youtube` - إيقاف النقل فوراً
+    `!start VIDEO_ID_or_LINK` - بدء نقل رسائل من يوتيوب لايف
+    `!stop` - إيقاف النقل فوراً
     `!status` - عرض تفاصيل حالة البوت
     `!explain` - شرح ازاي تجيب الاي دي
     `!commands` - عرض قائمة المساعدة الكاملة
@@ -275,8 +275,9 @@ async def commands_help(ctx):
     embed.add_field(name="💡 نصائح مهمة", 
                    value="• تأكد من أن الفيديو يحتوي على Live Chat نشط\n"
                         "• البوت يتجنب الرسائل المتكررة والسبام تلقائياً\n"
-                        "• يمكن تشغيل شات واحد فقط لكل قناة Discord\n"
-                        "• البوت يدعم الرسائل العربية والإنجليزية", 
+                        "• يمكن تشغيل شات واحد فقط لكل روم Discord\n"
+                        "• البوت يدعم الرسائل العربية والإنجليزية\n"
+                        "• 🌟 تحديث جديد : يمكنك الان استخدام لينك بدل من الاعتماد على الاي دي فقط 🌟", 
                    inline=False)
 
     embed.set_footer(text="© 2025 Ahmed Magdy - جميع الحقوق محفوظة", 
