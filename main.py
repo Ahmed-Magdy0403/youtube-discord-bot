@@ -35,6 +35,21 @@ def fix_mixed_text(text):
         return '\u202B' + text + '\u202C'
     return text
 
+def extract_video_id(text):
+    """
+    تحاول استخراج Video ID من روابط YouTube المختلفة أو ترجعه زي ما هو.
+    """
+    patterns = [
+        r'(?:v=|\/)([0-9A-Za-z_-]{11})(?:[&?]|\s|$)',
+        r'youtu\.be\/([0-9A-Za-z_-]{11})',
+        r'studio\.youtube\.com\/video\/([0-9A-Za-z_-]{11})'
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            return match.group(1)
+    return text.strip()
+
 @bot.event
 async def on_ready():
     print(f'✅ {bot.user} متصل بـ Discord!')
@@ -58,7 +73,6 @@ async def explain_command(ctx):
     except Exception as e:
         await ctx.send(f"Error deleting loading message: {e}")
 
-    # ✅ روابط الصور + الرسائل (جوا الدالة)
     images = [
         {
             "url": "https://i.postimg.cc/RZg19WHQ/1.png",
@@ -78,7 +92,6 @@ async def explain_command(ctx):
         }
     ]
 
-    # ✅ إرسال الصور مع الرسائل
     for item in images:
         embed = discord.Embed(description=item["description"], color=0x00aaff)
         embed.set_image(url=item["url"])
@@ -94,9 +107,7 @@ async def start_youtube_chat(ctx, video_id: str = None):
         await ctx.send("❌ يرجى إدخال كود الفيديو\nمثال: `!start_youtube dQw4w9WgXcQ`")
         return
 
-    if 'youtube.com' in video_id or 'youtu.be' in video_id:
-        await ctx.send("⚠️ يبدو أنك وضعت رابطاً بدلاً من ID الفيديو!\nاستخدم الأمر `!explain` لمعرفة كيفية استخراج ID الصحيح.")
-        return
+    video_id = extract_video_id(video_id)
 
     channel_id = ctx.channel.id
     if channel_id in active_chats:
@@ -160,16 +171,11 @@ async def monitor_youtube_chat(ctx, channel_id):
                     message_history = set(list(message_history)[-200:])
 
                 try:
-                    if c.datetime:
-                        dt = datetime.fromisoformat(c.datetime.replace('Z', '+00:00'))
-                        timestamp = dt
+                    timestamp = datetime.fromisoformat(c.datetime.replace('Z', '+00:00')) if c.datetime else datetime.now()
                 except:
                     timestamp = datetime.now()
 
-                if not message_content:
-                    message_content = "*رسالة فارغة او ايموجي*"
-                elif len(message_content) > 800:
-                    message_content = message_content[:800] + "..."
+                message_content = message_content[:800] + "..." if len(message_content) > 800 else message_content or "*رسالة فارغة او ايموجي*"
 
                 embed = discord.Embed(
                     title="🎬 **YouTube Live Chat**",
@@ -258,7 +264,7 @@ async def commands_help(ctx):
     )
 
     commands_text = """
-    `!start_youtube VIDEO_ID` - بدء نقل رسائل من يوتيوب لايف
+    `!start_youtube VIDEO_ID_or_LINK` - بدء نقل رسائل من يوتيوب لايف
     `!stop_youtube` - إيقاف النقل فوراً
     `!status` - عرض تفاصيل حالة البوت
     `!explain` - شرح ازاي تجيب الاي دي
