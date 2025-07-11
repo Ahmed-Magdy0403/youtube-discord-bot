@@ -6,6 +6,7 @@ from keep_alive import keep_alive
 import pytchat
 from datetime import datetime
 import re
+from rapidfuzz import fuzz
 
 # إعداد البوت
 intents = discord.Intents.default()
@@ -29,6 +30,7 @@ async def global_check(ctx):
 # متغيرات للتحكم في الشات
 active_chats = {}
 message_history = set()
+user_last_messages = {}
 
 def fix_mixed_text(text):
     if re.search(r'[\u0600-\u06FF]', text) and re.search(r'[a-zA-Z]', text):
@@ -36,9 +38,6 @@ def fix_mixed_text(text):
     return text
 
 def extract_video_id(text):
-    """
-    تحاول استخراج Video ID من روابط YouTube المختلفة أو ترجعه زي ما هو.
-    """
     patterns = [
         r'(?:v=|\/)([0-9A-Za-z_-]{11})(?:[&?]|\s|$)',
         r'youtu\.be\/([0-9A-Za-z_-]{11})',
@@ -61,37 +60,21 @@ async def on_ready():
 async def explain_command(ctx):
     await ctx.send("**# اولا الاي دي بنجيبه منين؟**\n**هنجيب الاي دي عن طريق لينك اللايف. يعني هتبدأ اللايف عادي جدا وبعدين هتاخد الاي دي من لينك اللايف وتكتبه كالتالي** \n ~~==========================================================~~")
     await asyncio.sleep(6)
-
     await ctx.send("**خلينا نقول مثال ان ده الاي دي :** \n `MKYi1QrW2jg&t=1612s` \n **استخدام الامر هيكون كده :** \n `!start MKYi1QrW2jg&t=1612s` \n ~~==========================================================~~")
     await asyncio.sleep(8)
-
     loading_msg = await ctx.send("**جاري تجهيز شرح عن طريق الصور, `الشرح للكمبيوتر والموبايل` ⏳**")
     await asyncio.sleep(4)
-
     try:
         await loading_msg.delete()
     except Exception as e:
         await ctx.send(f"Error deleting loading message: {e}")
 
     images = [
-        {
-            "url": "https://i.postimg.cc/RZg19WHQ/1.png",
-            "description": "📌 مكان الاي دي في اللينك من الكمبيوتر."
-        },
-        {
-            "url": "https://i.postimg.cc/m2wCNP8f/2.png",
-            "description": "📌 خطوات ازاي تجيب الاي دي من الموبايل : 1."
-        },
-        {
-            "url": "https://i.postimg.cc/sf5px6W2/3.png",
-            "description": "2."
-        },
-        {
-            "url": "https://i.postimg.cc/VL1XCq9W/4.png",
-            "description": "3"
-        }
+        {"url": "https://i.postimg.cc/RZg19WHQ/1.png", "description": "📌 مكان الاي دي في اللينك من الكمبيوتر."},
+        {"url": "https://i.postimg.cc/m2wCNP8f/2.png", "description": "📌 خطوات ازاي تجيب الاي دي من الموبايل : 1."},
+        {"url": "https://i.postimg.cc/sf5px6W2/3.png", "description": "2."},
+        {"url": "https://i.postimg.cc/VL1XCq9W/4.png", "description": "3"}
     ]
-
     for item in images:
         embed = discord.Embed(description=item["description"], color=0x00aaff)
         embed.set_image(url=item["url"])
@@ -108,14 +91,12 @@ async def start_youtube_chat(ctx, video_id: str = None):
         return
 
     video_id = extract_video_id(video_id)
-
     channel_id = ctx.channel.id
     if channel_id in active_chats:
         await ctx.send("⚠️ يوجد شات نشط بالفعل! استخدم `!stop` لإيقافه.")
         return
 
     await ctx.send(f'🔄 محاولة الاتصال بـ YouTube Live Chat...\n📺 Video ID: `{video_id}`')
-
     try:
         chat = pytchat.create(video_id=video_id)
         if not chat.is_alive():
@@ -135,15 +116,13 @@ async def start_youtube_chat(ctx, video_id: str = None):
         await ctx.send(f'❌ خطأ في الاتصال:\n```{str(e)}```')
 
 async def monitor_youtube_chat(ctx, channel_id):
-    global message_history
-
+    global message_history, user_last_messages
     chat_data = active_chats.get(channel_id)
     if not chat_data:
         return
 
     chat = chat_data['chat']
     message_count = 0
-
     try:
         while chat.is_alive() and chat_data.get('running', False):
             loop = asyncio.get_event_loop()
@@ -160,13 +139,20 @@ async def monitor_youtube_chat(ctx, channel_id):
                     break
 
                 message_content = c.message.strip() if c.message else ""
-                message_key = f"{c.author.name}:{message_content}"
+                author_name = c.author.name
 
+                # تحقق من التشابه مع الرسالة السابقة
+                last_msg = user_last_messages.get(author_name, "")
+                similarity = fuzz.ratio(message_content, last_msg)
+                if similarity > 90:
+                    print(f"❌ تم تجاهل رسالة مشابهة جدًا من {author_name} ({similarity}%)")
+                    continue
+                user_last_messages[author_name] = message_content
+
+                message_key = f"{author_name}:{message_content}"
                 if message_key in message_history:
                     continue
-
                 message_history.add(message_key)
-
                 if len(message_history) > 300:
                     message_history = set(list(message_history)[-200:])
 
@@ -183,25 +169,20 @@ async def monitor_youtube_chat(ctx, channel_id):
                     color=0xff0000,
                     timestamp=timestamp
                 )
-
                 if hasattr(c.author, 'imageUrl') and c.author.imageUrl:
                     embed.set_thumbnail(url=c.author.imageUrl)
-
                 message_count += 1
                 embed.set_footer(
                     text=f"📺 YouTube Live Chat • رسالة #{message_count} • 🔥",
                     icon_url="https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png"
                 )
-
                 try:
                     await ctx.send(embed=embed)
                     print(f"✅ تم إرسال رسالة من {c.author.name}: {c.message[:50]}...")
                     await asyncio.sleep(0.5)
                 except Exception as send_error:
                     print(f"❌ خطأ في إرسال الرسالة: {send_error}")
-
             await asyncio.sleep(3)
-
     except Exception as e:
         error_embed = discord.Embed(
             title="❌ خطأ في مراقبة الشات",
@@ -219,14 +200,11 @@ async def monitor_youtube_chat(ctx, channel_id):
 @bot.command(name='stop')
 async def stop_youtube_chat(ctx):
     channel_id = ctx.channel.id
-
     if channel_id not in active_chats:
         await ctx.send('⚠️ لا يوجد شات YouTube نشط في هذه القناة')
         return
-
     active_chats[channel_id]['running'] = False
     del active_chats[channel_id]
-
     embed = discord.Embed(
         title="⏹️ تم إيقاف YouTube Chat",
         description="تم إيقاف نقل الرسائل بنجاح",
@@ -238,20 +216,16 @@ async def stop_youtube_chat(ctx):
 @bot.command(name='status')
 async def status(ctx):
     active_count = len(active_chats)
-
     embed = discord.Embed(
         title="📊 حالة البوت",
         color=0x00ff00 if active_count > 0 else 0x999999
     )
-
     embed.add_field(name="🔗 الاتصال", value="متصل ✅", inline=True)
     embed.add_field(name="📺 الشاتات النشطة", value=f"{active_count}", inline=True)
     embed.add_field(name="🏓 Ping", value=f"{round(bot.latency * 1000)}ms", inline=True)
-
     if active_count > 0:
         channels = [f"<#{channel_id}>" for channel_id in active_chats.keys()]
         embed.add_field(name="📍 الرومات النشطة", value="\n".join(channels), inline=False)
-
     embed.set_footer(text="© 2025 Ahmed Magdy", icon_url="https://cdn.discordapp.com/emojis/741243683501817978.png")
     await ctx.send(embed=embed)
 
@@ -262,7 +236,6 @@ async def commands_help(ctx):
         description="بوت تنظيم رسايل اللايف بتقنية بسيطة وسلسة",
         color=0x0099ff
     )
-
     commands_text = """
     `!start VIDEO_ID_or_LINK` - بدء نقل رسائل من يوتيوب لايف
     `!stop` - إيقاف النقل فوراً
@@ -270,7 +243,6 @@ async def commands_help(ctx):
     `!explain` - شرح ازاي تجيب الاي دي
     `!commands` - عرض قائمة المساعدة الكاملة
     """
-
     embed.add_field(name="📋 الأوامر المتاحة", value=commands_text, inline=False)
     embed.add_field(name="💡 نصائح مهمة", 
                    value="• تأكد من أن الفيديو يحتوي على Live Chat نشط\n"
@@ -279,10 +251,8 @@ async def commands_help(ctx):
                         "• البوت يدعم الرسائل العربية والإنجليزية\n"
                         "• 🌟 تحديث جديد : يمكنك الان استخدام لينك بدل من الاعتماد على الاي دي فقط 🌟", 
                    inline=False)
-
     embed.set_footer(text="© 2025 Ahmed Magdy - جميع الحقوق محفوظة", 
                     icon_url="https://cdn.discordapp.com/emojis/741243683501817978.png")
-
     await ctx.send(embed=embed)
 
 async def main():
