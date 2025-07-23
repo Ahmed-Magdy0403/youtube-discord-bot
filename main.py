@@ -145,9 +145,9 @@ async def monitor_youtube_chat(ctx, channel_id):
                 # تحقق من التشابه مع الرسالة السابقة
                 last_msg = user_last_messages.get(author_name, "")
                 def normalize(text):
-                text = re.sub(r'[^\w\s]', '', text)  # إزالة الرموز
-                text = re.sub(r'[ًٌٍَُِّْـ]', '', text)  # إزالة التشكيل
-                return text.strip().lower()
+                    text = re.sub(r'[^\w\s]', '', text)  # إزالة الرموز
+                    text = re.sub(r'[ًٌٍَُِّْـ]', '', text)  # إزالة التشكيل
+                    return text.strip().lower()
                 
                 normalized_current = normalize(message_content)
                 normalized_last = normalize(last_msg)
