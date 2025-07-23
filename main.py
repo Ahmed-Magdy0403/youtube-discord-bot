@@ -135,17 +135,23 @@ async def monitor_youtube_chat(ctx, channel_id):
                 continue
 
             for c in items:
+                if not chat_data.get('running', False):
+                    break
+
                 message_content = c.message.strip() if c.message else ""
                 author_name = c.author.name
 
+                # تحقق من التشابه مع الرسالة السابقة
                 last_msg = user_last_messages.get(author_name, "")
+                similarity = fuzz.ratio(message_content, last_msg)
                 def normalize(text):
-                    text = re.sub(r'[^\w\s]', '', text)
-                    text = re.sub(r'[ًٌٍَُِّْـ]', '', text)
+                    text = re.sub(r'[^\w\s]', '', text)  # إزالة الرموز
+                    text = re.sub(r'[ًٌٍَُِّْـ]', '', text)  # إزالة التشكيل
                     return text.strip().lower()
-
+                
                 normalized_current = normalize(message_content)
                 normalized_last = normalize(last_msg)
+                
                 similarity = fuzz.ratio(normalized_current, normalized_last)
                 if similarity > 85:
                     print(f"❌ تم تجاهل رسالة مشابهة جدًا من {author_name} ({similarity}%)")
@@ -185,7 +191,6 @@ async def monitor_youtube_chat(ctx, channel_id):
                     await asyncio.sleep(0.5)
                 except Exception as send_error:
                     print(f"❌ خطأ في إرسال الرسالة: {send_error}")
-            pass
             await asyncio.sleep(3)
     except Exception as e:
         error_embed = discord.Embed(
@@ -198,20 +203,8 @@ async def monitor_youtube_chat(ctx, channel_id):
         except:
             pass
     finally:
-        # حذف الشات النشط من القاموس
         if channel_id in active_chats:
             del active_chats[channel_id]
-        # إرسال رسالة إيقاف تلقائي
-        embed_auto_stop = discord.Embed(
-            title="🛑 تم إيقاف نقل الرسائل تلقائيًا",
-            description="تم إيقاف نقل الرسائل تلقائيًا لأن البث انتهى أو تم إغلاقه.",
-            color=0xff0000
-        )
-        embed_auto_stop.set_footer(text="© 2025 Ahmed Magdy")
-        try:
-            await ctx.send(embed=embed_auto_stop)
-        except:
-            pass
 
 @bot.command(name='stop')
 async def stop_youtube_chat(ctx):
