@@ -125,7 +125,6 @@ async def monitor_youtube_chat(ctx, channel_id):
     message_count = 0
     try:
         while chat.is_alive() and chat_data.get('running', False):
-            await ctx.send("🛑 تم إيقاف نقل الرسائل تلقائيًا لأن البث تم إغلاقه أو انتهى.")
             loop = asyncio.get_event_loop()
             try:
                 chat_data_result = await loop.run_in_executor(None, chat.get)
@@ -136,26 +135,21 @@ async def monitor_youtube_chat(ctx, channel_id):
                 continue
 
             for c in items:
-                if not chat_data.get('running', False):
-                    break
-
                 message_content = c.message.strip() if c.message else ""
                 author_name = c.author.name
 
-                # تحقق من التشابه مع الرسالة السابقة
                 last_msg = user_last_messages.get(author_name, "")
                 def normalize(text):
-                    text = re.sub(r'[^\w\s]', '', text)  # إزالة الرموز
-                    text = re.sub(r'[ًٌٍَُِّْـ]', '', text)  # إزالة التشكيل
+                    text = re.sub(r'[^\w\s]', '', text)
+                    text = re.sub(r'[ًٌٍَُِّْـ]', '', text)
                     return text.strip().lower()
-                
+
                 normalized_current = normalize(message_content)
                 normalized_last = normalize(last_msg)
-                
                 similarity = fuzz.ratio(normalized_current, normalized_last)
                 if similarity > 85:
-                print(f"❌ تم تجاهل رسالة مشابهة جدًا من {author_name} ({similarity}%)")
-                continue
+                    print(f"❌ تم تجاهل رسالة مشابهة جدًا من {author_name} ({similarity}%)")
+                    continue
                 user_last_messages[author_name] = message_content
 
                 message_key = f"{author_name}:{message_content}"
@@ -205,6 +199,10 @@ async def monitor_youtube_chat(ctx, channel_id):
     finally:
         if channel_id in active_chats:
             del active_chats[channel_id]
+        try:
+            await ctx.send("🛑 تم إيقاف نقل الرسائل تلقائيًا لأن البث انتهى أو تم إغلاقه.")
+        except:
+            pass
 
 @bot.command(name='stop')
 async def stop_youtube_chat(ctx):
