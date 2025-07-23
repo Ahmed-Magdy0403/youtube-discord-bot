@@ -135,11 +135,58 @@ async def monitor_youtube_chat(ctx, channel_id):
                 continue
 
             for c in items:
-                # ... (معالجة الرسائل كما هي في كودك)
-                pass
+                message_content = c.message.strip() if c.message else ""
+                author_name = c.author.name
 
+                last_msg = user_last_messages.get(author_name, "")
+                def normalize(text):
+                    text = re.sub(r'[^\w\s]', '', text)
+                    text = re.sub(r'[ًٌٍَُِّْـ]', '', text)
+                    return text.strip().lower()
+
+                normalized_current = normalize(message_content)
+                normalized_last = normalize(last_msg)
+                similarity = fuzz.ratio(normalized_current, normalized_last)
+                if similarity > 85:
+                    print(f"❌ تم تجاهل رسالة مشابهة جدًا من {author_name} ({similarity}%)")
+                    continue
+                user_last_messages[author_name] = message_content
+
+                message_key = f"{author_name}:{message_content}"
+                if message_key in message_history:
+                    continue
+                message_history.add(message_key)
+                if len(message_history) > 300:
+                    message_history = set(list(message_history)[-200:])
+
+                try:
+                    timestamp = datetime.fromisoformat(c.datetime.replace('Z', '+00:00')) if c.datetime else datetime.now()
+                except:
+                    timestamp = datetime.now()
+
+                message_content = message_content[:800] + "..." if len(message_content) > 800 else message_content or "*رسالة فارغة او ايموجي*"
+
+                embed = discord.Embed(
+                    title="🎬 **YouTube Live Chat**",
+                    description=f"### 👤 **{c.author.name}**\n\n### 💬 {fix_mixed_text(message_content)}",
+                    color=0xff0000,
+                    timestamp=timestamp
+                )
+                if hasattr(c.author, 'imageUrl') and c.author.imageUrl:
+                    embed.set_thumbnail(url=c.author.imageUrl)
+                message_count += 1
+                embed.set_footer(
+                    text=f"📺 YouTube Live Chat • رسالة #{message_count} • 🔥",
+                    icon_url="https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png"
+                )
+                try:
+                    await ctx.send(embed=embed)
+                    print(f"✅ تم إرسال رسالة من {c.author.name}: {c.message[:50]}...")
+                    await asyncio.sleep(0.5)
+                except Exception as send_error:
+                    print(f"❌ خطأ في إرسال الرسالة: {send_error}")
+            pass
             await asyncio.sleep(3)
-
     except Exception as e:
         error_embed = discord.Embed(
             title="❌ خطأ في مراقبة الشات",
@@ -150,7 +197,6 @@ async def monitor_youtube_chat(ctx, channel_id):
             await ctx.send(embed=error_embed)
         except:
             pass
-
     finally:
         # حذف الشات النشط من القاموس
         if channel_id in active_chats:
