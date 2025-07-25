@@ -205,6 +205,11 @@ async def monitor_youtube_chat(ctx, channel_id):
     finally:
         if channel_id in active_chats:
             del active_chats[channel_id]
+        try:
+            await ctx.send("📴 **تم إيقاف البوت تلقائيًا لأن البث انتهى.**")
+        except:
+            pass
+
 
 @bot.command(name='stop')
 async def stop_youtube_chat(ctx):
